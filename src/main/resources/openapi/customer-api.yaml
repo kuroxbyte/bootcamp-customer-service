@@ -1,0 +1,115 @@
+openapi: 3.0.3
+info:
+  title: Customer Service API
+  description: Gestión de los clientes del banco (personales y empresariales).
+  version: 1.0.0
+servers:
+  - url: http://localhost:8081
+    description: Local
+tags:
+  - name: Customers
+    description: Clientes del banco
+paths:
+  /api/v1/customers:
+    post:
+      tags: [Customers]
+      operationId: createCustomer
+      summary: Crear un cliente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+      responses:
+        '201':
+          description: Cliente creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /api/v1/customers/{customerId}:
+    get:
+      tags: [Customers]
+      operationId: getCustomerById
+      summary: Consultar un cliente
+      description: Usado por account-service y credit-service para validar el cliente y su tipo.
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+      responses:
+        '200':
+          description: Cliente encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  parameters:
+    CustomerId:
+      name: customerId
+      in: path
+      required: true
+      description: Id del cliente
+      schema:
+        type: string
+  schemas:
+    CustomerType:
+      type: string
+      description: Tipo de cliente
+      enum: [PERSONAL, BUSINESS]
+    CustomerRequest:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          example: Comercial Andina SAC
+        type:
+          $ref: '#/components/schemas/CustomerType'
+    CustomerResponse:
+      type: object
+      required: [id, name, type]
+      properties:
+        id:
+          type: string
+          example: 6650f1c2a4b5c6d7e8f90123
+        name:
+          type: string
+          example: Comercial Andina SAC
+        type:
+          $ref: '#/components/schemas/CustomerType'
+    Problem:
+      type: object
+      description: Detalle de error (RFC 7807)
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+          format: int32
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri
+  responses:
+    BadRequest:
+      description: Datos de entrada inválidos
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: El recurso no existe
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
