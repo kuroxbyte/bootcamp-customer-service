@@ -2,6 +2,7 @@ package dev.bootcamp.customerservice.infrastructure.persistence;
 
 import dev.bootcamp.customerservice.domain.model.customer.Customer;
 import dev.bootcamp.customerservice.domain.model.customer.CustomerType;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
@@ -31,7 +32,7 @@ class CustomerPersistenceAdapterTest {
 
         Customer saved = adapter.save(customer).blockingGet();
 
-        adapter.findById(saved.getId()).test().awaitDone(5, java.util.concurrent.TimeUnit.SECONDS)
+        adapter.findById(saved.getId()).test().awaitDone(5, TimeUnit.SECONDS)
                 .assertValue(found -> found.getId().equals(saved.getId())
                         && found.getName().equals("Comercial Andina SAC")
                         && found.getType() == CustomerType.BUSINESS);
@@ -40,7 +41,7 @@ class CustomerPersistenceAdapterTest {
     @Test
     void returnsEmptyWhenCustomerDoesNotExist() {
         adapter.findById("000000000000000000000000").test()
-                .awaitDone(5, java.util.concurrent.TimeUnit.SECONDS)
+                .awaitDone(5, TimeUnit.SECONDS)
                 .assertComplete()
                 .assertNoValues();
     }
