@@ -5,11 +5,15 @@ import dev.bootcamp.customerservice.domain.model.customer.Customer;
 import dev.bootcamp.customerservice.domain.model.customer.CustomerType;
 import io.reactivex.rxjava3.core.Single;
 
-/** Implementación de {@link CreateCustomerUseCase}. */
+/**
+ * Implementación de {@link CreateCustomerUseCase}.
+ */
 public class CreateCustomerUseCaseImpl implements CreateCustomerUseCase {
     private final CustomerRepository customerRepository;
 
-    /** Crea el caso de uso con los adaptadores de sus puertos. */
+    /**
+     * Crea el caso de uso con los adaptadores de sus puertos.
+     */
     public CreateCustomerUseCaseImpl(CustomerRepository customerRepository) {
         this.customerRepository = customerRepository;
     }

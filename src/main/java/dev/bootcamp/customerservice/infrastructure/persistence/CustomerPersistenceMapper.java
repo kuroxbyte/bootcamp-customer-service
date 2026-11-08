@@ -3,7 +3,9 @@ package dev.bootcamp.customerservice.infrastructure.persistence;
 import dev.bootcamp.customerservice.domain.model.customer.Customer;
 import dev.bootcamp.customerservice.domain.model.customer.CustomerType;
 
-/** Conversión entre el dominio y el documento de MongoDB. */
+/**
+ * Conversión entre el dominio y el documento de MongoDB.
+ */
 final class CustomerPersistenceMapper {
     private CustomerPersistenceMapper() {}
 

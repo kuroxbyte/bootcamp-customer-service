@@ -24,14 +24,18 @@ import reactor.core.publisher.Mono;
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    /** Responde 404 cuando el recurso no existe o no pertenece al cliente. */
+    /**
+     * Responde 404 cuando el recurso no existe o no pertenece al cliente.
+     */
     @ExceptionHandler(NotFoundException.class)
     public Mono<ResponseEntity<ProblemDetail>> handleNotFound(NotFoundException ex) {
         log.warn("Resource not found: {}", ex.getMessage());
         return problem(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage());
     }
 
-    /** Responde 500 ante cualquier otro error, sin exponer el detalle interno. */
+    /**
+     * Responde 500 ante cualquier otro error, sin exponer el detalle interno.
+     */
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<ProblemDetail>> handleUnexpected(Exception ex) {
         log.error("Unexpected error", ex);
@@ -40,7 +44,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     private static Mono<ResponseEntity<ProblemDetail>> problem(
-            HttpStatus status, String title, String detail) {
+            HttpStatus status,
+            String title,
+            String detail) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
         problem.setTitle(title);
         return Mono.just(ResponseEntity.status(status).body(problem));

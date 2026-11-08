@@ -2,7 +2,6 @@ package dev.bootcamp.customerservice.infrastructure.persistence;
 
 import dev.bootcamp.customerservice.domain.model.customer.Customer;
 import dev.bootcamp.customerservice.domain.model.customer.CustomerType;
-import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.mongodb.test.autoconfigure.DataMongoTest;
@@ -11,6 +10,8 @@ import org.springframework.context.annotation.Import;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mongodb.MongoDBContainer;
+
+import java.util.concurrent.TimeUnit;
 
 @Testcontainers
 @DataMongoTest

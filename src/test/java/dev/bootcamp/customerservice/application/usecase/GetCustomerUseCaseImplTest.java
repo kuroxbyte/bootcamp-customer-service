@@ -1,7 +1,5 @@
 package dev.bootcamp.customerservice.application.usecase;
 
-import static org.mockito.Mockito.when;
-
 import dev.bootcamp.customerservice.application.port.CustomerRepository;
 import dev.bootcamp.customerservice.domain.exception.NotFoundException;
 import dev.bootcamp.customerservice.domain.model.customer.Customer;
@@ -11,6 +9,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class GetCustomerUseCaseImplTest {

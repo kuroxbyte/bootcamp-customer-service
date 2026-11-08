@@ -3,7 +3,9 @@ package dev.bootcamp.customerservice;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-/** Punto de entrada de customer-service. */
+/**
+ * Punto de entrada de customer-service.
+ */
 @SpringBootApplication
 public class CustomerServiceApplication {
 
