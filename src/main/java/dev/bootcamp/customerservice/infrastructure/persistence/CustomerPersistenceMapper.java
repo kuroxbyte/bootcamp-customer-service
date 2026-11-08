@@ -5,12 +5,11 @@ import dev.bootcamp.customerservice.domain.model.customer.CustomerType;
 
 /** Conversión entre el dominio y el documento de MongoDB. */
 final class CustomerPersistenceMapper {
-
-    private CustomerPersistenceMapper() {
-    }
+    private CustomerPersistenceMapper() {}
 
     static CustomerDocument toDocument(Customer customer) {
-        return new CustomerDocument(customer.getId(), customer.getName(), customer.getType().name());
+        return new CustomerDocument(
+                customer.getId(), customer.getName(), customer.getType().name());
     }
 
     static Customer toDomain(CustomerDocument document) {

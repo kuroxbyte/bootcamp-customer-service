@@ -21,14 +21,11 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 @WebFluxTest(CustomerController.class)
 class CustomerControllerTest {
 
-    @Autowired
-    private WebTestClient webTestClient;
+    @Autowired private WebTestClient webTestClient;
 
-    @MockitoBean
-    private CreateCustomerUseCase createCustomerUseCase;
+    @MockitoBean private CreateCustomerUseCase createCustomerUseCase;
 
-    @MockitoBean
-    private GetCustomerUseCase getCustomerUseCase;
+    @MockitoBean private GetCustomerUseCase getCustomerUseCase;
 
     private static Customer customer(String id, String name, CustomerType type) {
         Customer customer = new Customer();
@@ -43,24 +40,33 @@ class CustomerControllerTest {
         when(createCustomerUseCase.execute("Ana Torres", CustomerType.PERSONAL))
                 .thenReturn(Single.just(customer("1", "Ana Torres", CustomerType.PERSONAL)));
 
-        webTestClient.post().uri("/api/v1/customers")
+        webTestClient
+                .post()
+                .uri("/api/v1/customers")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"name\":\"Ana Torres\",\"type\":\"PERSONAL\"}")
                 .exchange()
-                .expectStatus().isCreated()
+                .expectStatus()
+                .isCreated()
                 .expectBody()
-                .jsonPath("$.id").isEqualTo("1")
-                .jsonPath("$.name").isEqualTo("Ana Torres")
-                .jsonPath("$.type").isEqualTo("PERSONAL");
+                .jsonPath("$.id")
+                .isEqualTo("1")
+                .jsonPath("$.name")
+                .isEqualTo("Ana Torres")
+                .jsonPath("$.type")
+                .isEqualTo("PERSONAL");
     }
 
     @Test
     void rejectsInvalidCustomerRequest() {
-        webTestClient.post().uri("/api/v1/customers")
+        webTestClient
+                .post()
+                .uri("/api/v1/customers")
                 .contentType(MediaType.APPLICATION_JSON)
                 .bodyValue("{\"name\":\"\"}")
                 .exchange()
-                .expectStatus().isBadRequest();
+                .expectStatus()
+                .isBadRequest();
 
         verify(createCustomerUseCase, never()).execute(any(), any());
     }
@@ -68,25 +74,37 @@ class CustomerControllerTest {
     @Test
     void returnsCustomerById() {
         when(getCustomerUseCase.execute("1"))
-                .thenReturn(Single.just(customer("1", "Comercial Andina SAC", CustomerType.BUSINESS)));
+                .thenReturn(
+                        Single.just(customer("1", "Comercial Andina SAC", CustomerType.BUSINESS)));
 
-        webTestClient.get().uri("/api/v1/customers/1")
+        webTestClient
+                .get()
+                .uri("/api/v1/customers/1")
                 .exchange()
-                .expectStatus().isOk()
+                .expectStatus()
+                .isOk()
                 .expectBody()
-                .jsonPath("$.type").isEqualTo("BUSINESS");
+                .jsonPath("$.type")
+                .isEqualTo("BUSINESS");
     }
 
     @Test
     void returnsNotFoundProblemWhenCustomerDoesNotExist() {
-        when(getCustomerUseCase.execute("99")).thenReturn(Single.error(new NotFoundException("El cliente no existe")));
+        when(getCustomerUseCase.execute("99"))
+                .thenReturn(Single.error(new NotFoundException("El cliente no existe")));
 
-        webTestClient.get().uri("/api/v1/customers/99")
+        webTestClient
+                .get()
+                .uri("/api/v1/customers/99")
                 .exchange()
-                .expectStatus().isNotFound()
-                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .expectStatus()
+                .isNotFound()
+                .expectHeader()
+                .contentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .expectBody()
-                .jsonPath("$.status").isEqualTo(404)
-                .jsonPath("$.detail").isEqualTo("El cliente no existe");
+                .jsonPath("$.status")
+                .isEqualTo(404)
+                .jsonPath("$.detail")
+                .isEqualTo("El cliente no existe");
     }
 }

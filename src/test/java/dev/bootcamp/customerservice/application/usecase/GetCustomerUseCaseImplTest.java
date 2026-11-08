@@ -15,11 +15,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class GetCustomerUseCaseImplTest {
 
-    @Mock
-    private CustomerRepository customerRepository;
+    @Mock private CustomerRepository customerRepository;
 
-    @InjectMocks
-    private GetCustomerUseCaseImpl useCase;
+    @InjectMocks private GetCustomerUseCaseImpl useCase;
 
     @Test
     void returnsExistingCustomer() {

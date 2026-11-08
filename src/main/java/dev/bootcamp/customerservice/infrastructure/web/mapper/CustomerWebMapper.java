@@ -8,15 +8,18 @@ import dev.bootcamp.customerservice.infrastructure.web.dto.CustomerTypeDto;
 /** Conversión entre los DTOs del contrato OpenAPI y el dominio. */
 public final class CustomerWebMapper {
 
-    private CustomerWebMapper() {
-    }
+    private CustomerWebMapper() {}
 
+    /** Convierte el tipo del contrato OpenAPI al tipo del dominio. */
     public static CustomerType toDomain(CustomerTypeDto type) {
         return CustomerType.valueOf(type.name());
     }
 
+    /** Convierte {@link Customer} en su DTO de respuesta. */
     public static CustomerResponseDto toResponse(Customer customer) {
         return new CustomerResponseDto(
-                customer.getId(), customer.getName(), CustomerTypeDto.valueOf(customer.getType().name()));
+                customer.getId(),
+                customer.getName(),
+                CustomerTypeDto.valueOf(customer.getType().name()));
     }
 }

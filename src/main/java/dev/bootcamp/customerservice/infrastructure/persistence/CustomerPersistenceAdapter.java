@@ -18,7 +18,8 @@ public class CustomerPersistenceAdapter implements CustomerRepository {
 
     @Override
     public Single<Customer> save(Customer customer) {
-        return Single.fromPublisher(mongoRepository.save(CustomerPersistenceMapper.toDocument(customer)))
+        return Single.fromPublisher(
+                        mongoRepository.save(CustomerPersistenceMapper.toDocument(customer)))
                 .doOnSuccess(saved -> log.debug("Customer saved customerId={}", saved.getId()))
                 .map(CustomerPersistenceMapper::toDomain);
     }
