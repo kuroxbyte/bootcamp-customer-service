@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+/** Endpoints de clientes definidos en el contrato OpenAPI. */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -23,20 +24,33 @@ public class CustomerController implements CustomersApi {
     private final GetCustomerUseCase getCustomerUseCase;
 
     @Override
-    public Mono<ResponseEntity<CustomerResponseDto>> createCustomer(Mono<CustomerRequestDto> customerRequestDto,
-                                                                    ServerWebExchange exchange) {
+    public Mono<ResponseEntity<CustomerResponseDto>> createCustomer(
+            Mono<CustomerRequestDto> customerRequestDto, ServerWebExchange exchange) {
         return customerRequestDto
-                .flatMap(request -> Mono.from(createCustomerUseCase
-                        .execute(request.getName(), CustomerWebMapper.toDomain(request.getType()))
-                        .toFlowable()))
-                .doOnNext(customer -> log.info("Customer created customerId={} type={}",
-                        customer.getId(), customer.getType()))
-                .map(customer -> ResponseEntity.status(HttpStatus.CREATED)
-                        .body(CustomerWebMapper.toResponse(customer)));
+                .flatMap(
+                        request ->
+                                Mono.from(
+                                        createCustomerUseCase
+                                                .execute(
+                                                        request.getName(),
+                                                        CustomerWebMapper.toDomain(
+                                                                request.getType()))
+                                                .toFlowable()))
+                .doOnNext(
+                        customer ->
+                                log.info(
+                                        "Customer created customerId={} type={}",
+                                        customer.getId(),
+                                        customer.getType()))
+                .map(
+                        customer ->
+                                ResponseEntity.status(HttpStatus.CREATED)
+                                        .body(CustomerWebMapper.toResponse(customer)));
     }
 
     @Override
-    public Mono<ResponseEntity<CustomerResponseDto>> getCustomerById(String customerId, ServerWebExchange exchange) {
+    public Mono<ResponseEntity<CustomerResponseDto>> getCustomerById(
+            String customerId, ServerWebExchange exchange) {
         log.debug("Fetching customer customerId={}", customerId);
         return Mono.from(getCustomerUseCase.execute(customerId).toFlowable())
                 .map(customer -> ResponseEntity.ok(CustomerWebMapper.toResponse(customer)));

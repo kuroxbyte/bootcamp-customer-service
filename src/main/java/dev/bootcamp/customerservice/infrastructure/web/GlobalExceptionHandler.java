@@ -14,29 +14,33 @@ import reactor.core.publisher.Mono;
  * Traduce las excepciones a respuestas Problem Details (RFC 7807).
  *
  * <ul>
- *   <li>400: datos de entrada inválidos o falta un header; lo resuelve
- *       {@link ResponseEntityExceptionHandler}.</li>
- *   <li>404: {@link NotFoundException}.</li>
- *   <li>500: cualquier otro error inesperado.</li>
+ *   <li>400: datos de entrada inválidos o falta un header; lo resuelve {@link
+ *       ResponseEntityExceptionHandler}.
+ *   <li>404: {@link NotFoundException}.
+ *   <li>500: cualquier otro error inesperado.
  * </ul>
  */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
+    /** Responde 404 cuando el recurso no existe o no pertenece al cliente. */
     @ExceptionHandler(NotFoundException.class)
     public Mono<ResponseEntity<ProblemDetail>> handleNotFound(NotFoundException ex) {
         log.warn("Resource not found: {}", ex.getMessage());
         return problem(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage());
     }
 
+    /** Responde 500 ante cualquier otro error, sin exponer el detalle interno. */
     @ExceptionHandler(Exception.class)
     public Mono<ResponseEntity<ProblemDetail>> handleUnexpected(Exception ex) {
         log.error("Unexpected error", ex);
-        return problem(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno", "Ocurrió un error inesperado");
+        return problem(
+                HttpStatus.INTERNAL_SERVER_ERROR, "Error interno", "Ocurrió un error inesperado");
     }
 
-    private static Mono<ResponseEntity<ProblemDetail>> problem(HttpStatus status, String title, String detail) {
+    private static Mono<ResponseEntity<ProblemDetail>> problem(
+            HttpStatus status, String title, String detail) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, detail);
         problem.setTitle(title);
         return Mono.just(ResponseEntity.status(status).body(problem));

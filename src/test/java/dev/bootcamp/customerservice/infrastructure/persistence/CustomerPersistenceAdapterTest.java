@@ -17,12 +17,9 @@ import org.testcontainers.mongodb.MongoDBContainer;
 @Import(CustomerPersistenceAdapter.class)
 class CustomerPersistenceAdapterTest {
 
-    @Container
-    @ServiceConnection
-    static MongoDBContainer mongo = new MongoDBContainer("mongo:7.0");
+    @Container @ServiceConnection static MongoDBContainer mongo = new MongoDBContainer("mongo:7.0");
 
-    @Autowired
-    private CustomerPersistenceAdapter adapter;
+    @Autowired private CustomerPersistenceAdapter adapter;
 
     @Test
     void savesAndFindsCustomer() {
@@ -32,15 +29,20 @@ class CustomerPersistenceAdapterTest {
 
         Customer saved = adapter.save(customer).blockingGet();
 
-        adapter.findById(saved.getId()).test().awaitDone(5, TimeUnit.SECONDS)
-                .assertValue(found -> found.getId().equals(saved.getId())
-                        && found.getName().equals("Comercial Andina SAC")
-                        && found.getType() == CustomerType.BUSINESS);
+        adapter.findById(saved.getId())
+                .test()
+                .awaitDone(5, TimeUnit.SECONDS)
+                .assertValue(
+                        found ->
+                                found.getId().equals(saved.getId())
+                                        && found.getName().equals("Comercial Andina SAC")
+                                        && found.getType() == CustomerType.BUSINESS);
     }
 
     @Test
     void returnsEmptyWhenCustomerDoesNotExist() {
-        adapter.findById("000000000000000000000000").test()
+        adapter.findById("000000000000000000000000")
+                .test()
                 .awaitDone(5, TimeUnit.SECONDS)
                 .assertComplete()
                 .assertNoValues();

@@ -15,18 +15,19 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class CreateCustomerUseCaseImplTest {
 
-    @Mock
-    private CustomerRepository customerRepository;
+    @Mock private CustomerRepository customerRepository;
 
-    @InjectMocks
-    private CreateCustomerUseCaseImpl useCase;
+    @InjectMocks private CreateCustomerUseCaseImpl useCase;
 
     @Test
     void savesCustomerWithNameAndType() {
         when(customerRepository.save(any())).thenAnswer(inv -> Single.just(inv.getArgument(0)));
 
-        useCase.execute("Comercial Andina SAC", CustomerType.BUSINESS).test()
-                .assertValue(customer -> customer.getName().equals("Comercial Andina SAC")
-                        && customer.getType() == CustomerType.BUSINESS);
+        useCase.execute("Comercial Andina SAC", CustomerType.BUSINESS)
+                .test()
+                .assertValue(
+                        customer ->
+                                customer.getName().equals("Comercial Andina SAC")
+                                        && customer.getType() == CustomerType.BUSINESS);
     }
 }
