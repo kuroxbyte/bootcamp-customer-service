@@ -15,13 +15,17 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class UseCaseConfig {
 
-    /** Registra el caso de uso {@link CreateCustomerUseCase}. */
+    /**
+     * Registra el caso de uso {@link CreateCustomerUseCase}.
+     */
     @Bean
     public CreateCustomerUseCase createCustomerUseCase(CustomerRepository customerRepository) {
         return new CreateCustomerUseCaseImpl(customerRepository);
     }
 
-    /** Registra el caso de uso {@link GetCustomerUseCase}. */
+    /**
+     * Registra el caso de uso {@link GetCustomerUseCase}.
+     */
     @Bean
     public GetCustomerUseCase getCustomerUseCase(CustomerRepository customerRepository) {
         return new GetCustomerUseCaseImpl(customerRepository);

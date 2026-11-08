@@ -7,7 +7,9 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-/** Cliente tal como se guarda en la colección {@code customers}. */
+/**
+ * Cliente tal como se guarda en la colección {@code customers}.
+ */
 @Getter
 @Setter
 @NoArgsConstructor

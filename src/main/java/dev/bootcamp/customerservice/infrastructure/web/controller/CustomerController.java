@@ -14,7 +14,9 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-/** Endpoints de clientes definidos en el contrato OpenAPI. */
+/**
+ * Endpoints de clientes definidos en el contrato OpenAPI.
+ */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
@@ -25,7 +27,8 @@ public class CustomerController implements CustomersApi {
 
     @Override
     public Mono<ResponseEntity<CustomerResponseDto>> createCustomer(
-            Mono<CustomerRequestDto> customerRequestDto, ServerWebExchange exchange) {
+            Mono<CustomerRequestDto> customerRequestDto,
+            ServerWebExchange exchange) {
         return customerRequestDto
                 .flatMap(
                         request ->
@@ -50,7 +53,8 @@ public class CustomerController implements CustomersApi {
 
     @Override
     public Mono<ResponseEntity<CustomerResponseDto>> getCustomerById(
-            String customerId, ServerWebExchange exchange) {
+            String customerId,
+            ServerWebExchange exchange) {
         log.debug("Fetching customer customerId={}", customerId);
         return Mono.from(getCustomerUseCase.execute(customerId).toFlowable())
                 .map(customer -> ResponseEntity.ok(CustomerWebMapper.toResponse(customer)));

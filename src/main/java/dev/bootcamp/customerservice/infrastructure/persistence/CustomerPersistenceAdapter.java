@@ -8,7 +8,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
-/** Implementa el puerto {@link CustomerRepository} con MongoDB reactivo. */
+/**
+ * Implementa el puerto {@link CustomerRepository} con MongoDB reactivo.
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
