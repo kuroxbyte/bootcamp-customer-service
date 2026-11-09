@@ -9,3 +9,8 @@ spring:
       enabled: false
   mongodb:
     uri: mongodb://localhost:27017/customer_test_db
+
+eureka:
+  client:
+    # Las pruebas no se registran en Eureka.
+    enabled: false
