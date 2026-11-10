@@ -30,6 +30,8 @@ paths:
                 $ref: '#/components/schemas/CustomerResponse'
         '400':
           $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
   /api/v1/customers/{customerId}:
     get:
       tags: [Customers]
@@ -61,9 +63,13 @@ components:
       type: string
       description: Tipo de cliente
       enum: [PERSONAL, BUSINESS]
+    CustomerProfile:
+      type: string
+      description: Perfil del cliente; PERSONAL admite STANDARD o VIP y BUSINESS admite STANDARD o PYME
+      enum: [STANDARD, VIP, PYME]
     CustomerRequest:
       type: object
-      required: [name, type]
+      required: [name, type, profile]
       properties:
         name:
           type: string
@@ -71,9 +77,11 @@ components:
           example: Comercial Andina SAC
         type:
           $ref: '#/components/schemas/CustomerType'
+        profile:
+          $ref: '#/components/schemas/CustomerProfile'
     CustomerResponse:
       type: object
-      required: [id, name, type]
+      required: [id, name, type, profile]
       properties:
         id:
           type: string
@@ -83,6 +91,8 @@ components:
           example: Comercial Andina SAC
         type:
           $ref: '#/components/schemas/CustomerType'
+        profile:
+          $ref: '#/components/schemas/CustomerProfile'
     Problem:
       type: object
       description: Detalle de error (RFC 7807)
@@ -101,6 +111,12 @@ components:
           type: string
           format: uri
   responses:
+    BusinessRuleViolation:
+      description: El perfil no corresponde al tipo de cliente
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
     BadRequest:
       description: Datos de entrada inválidos
       content:

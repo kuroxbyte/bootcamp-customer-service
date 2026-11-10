@@ -30,21 +30,17 @@ public class CustomerController implements CustomersApi {
             Mono<CustomerRequestDto> customerRequestDto,
             ServerWebExchange exchange) {
         return customerRequestDto
-                .flatMap(
-                        request ->
-                                Mono.from(
-                                        createCustomerUseCase
-                                                .execute(
-                                                        request.getName(),
-                                                        CustomerWebMapper.toDomain(
-                                                                request.getType()))
-                                                .toFlowable()))
-                .doOnNext(
-                        customer ->
-                                log.info(
-                                        "Customer created customerId={} type={}",
-                                        customer.getId(),
-                                        customer.getType()))
+                .flatMap(request -> Mono.from(createCustomerUseCase
+                        .execute(
+                                request.getName(),
+                                CustomerWebMapper.toDomain(request.getType()),
+                                CustomerWebMapper.toDomain(request.getProfile()))
+                        .toFlowable()))
+                .doOnNext(customer -> log.info(
+                        "Customer created customerId={} type={} profile={}",
+                        customer.getId(),
+                        customer.getType(),
+                        customer.getProfile()))
                 .map(
                         customer ->
                                 ResponseEntity.status(HttpStatus.CREATED)

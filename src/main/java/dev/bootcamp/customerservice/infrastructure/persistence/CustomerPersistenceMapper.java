@@ -1,6 +1,7 @@
 package dev.bootcamp.customerservice.infrastructure.persistence;
 
 import dev.bootcamp.customerservice.domain.model.customer.Customer;
+import dev.bootcamp.customerservice.domain.model.customer.CustomerProfile;
 import dev.bootcamp.customerservice.domain.model.customer.CustomerType;
 
 /**
@@ -11,7 +12,10 @@ final class CustomerPersistenceMapper {
 
     static CustomerDocument toDocument(Customer customer) {
         return new CustomerDocument(
-                customer.getId(), customer.getName(), customer.getType().name());
+                customer.getId(),
+                customer.getName(),
+                customer.getType().name(),
+                customer.getProfile().name());
     }
 
     static Customer toDomain(CustomerDocument document) {
@@ -19,6 +23,7 @@ final class CustomerPersistenceMapper {
         customer.setId(document.getId());
         customer.setName(document.getName());
         customer.setType(CustomerType.valueOf(document.getType()));
+        customer.setProfile(CustomerProfile.valueOf(document.getProfile()));
         return customer;
     }
 }
