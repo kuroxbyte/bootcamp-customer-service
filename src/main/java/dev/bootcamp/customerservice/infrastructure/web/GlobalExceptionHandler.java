@@ -1,5 +1,6 @@
 package dev.bootcamp.customerservice.infrastructure.web;
 
+import dev.bootcamp.customerservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.customerservice.domain.exception.NotFoundException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,6 +18,7 @@ import reactor.core.publisher.Mono;
  *   <li>400: datos de entrada inválidos o falta un header; lo resuelve {@link
  *       ResponseEntityExceptionHandler}.
  *   <li>404: {@link NotFoundException}.
+ *   <li>422: {@link BusinessRuleException}.
  *   <li>500: cualquier otro error inesperado.
  * </ul>
  */
@@ -31,6 +33,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     public Mono<ResponseEntity<ProblemDetail>> handleNotFound(NotFoundException ex) {
         log.warn("Resource not found: {}", ex.getMessage());
         return problem(HttpStatus.NOT_FOUND, "Recurso no encontrado", ex.getMessage());
+    }
+
+    /**
+     * Responde 422 cuando se incumple una regla de negocio.
+     */
+    @ExceptionHandler(BusinessRuleException.class)
+    public Mono<ResponseEntity<ProblemDetail>> handleBusinessRule(BusinessRuleException ex) {
+        log.warn("Business rule violated: {}", ex.getMessage());
+        return problem(
+                HttpStatus.UNPROCESSABLE_CONTENT,
+                "Regla de negocio incumplida",
+                ex.getMessage());
     }
 
     /**

@@ -2,8 +2,10 @@ package dev.bootcamp.customerservice.infrastructure.web.controller;
 
 import dev.bootcamp.customerservice.application.usecase.CreateCustomerUseCase;
 import dev.bootcamp.customerservice.application.usecase.GetCustomerUseCase;
+import dev.bootcamp.customerservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.customerservice.domain.exception.NotFoundException;
 import dev.bootcamp.customerservice.domain.model.customer.Customer;
+import dev.bootcamp.customerservice.domain.model.customer.CustomerProfile;
 import dev.bootcamp.customerservice.domain.model.customer.CustomerType;
 import io.reactivex.rxjava3.core.Single;
 import org.junit.jupiter.api.Test;
@@ -32,19 +34,24 @@ class CustomerControllerTest {
         customer.setId(id);
         customer.setName(name);
         customer.setType(type);
+        customer.setProfile(
+                type == CustomerType.PERSONAL ? CustomerProfile.VIP : CustomerProfile.PYME);
         return customer;
     }
 
     @Test
     void createsCustomer() {
-        when(createCustomerUseCase.execute("Ana Torres", CustomerType.PERSONAL))
+        when(createCustomerUseCase.execute(
+                        "Ana Torres",
+                        CustomerType.PERSONAL,
+                        CustomerProfile.VIP))
                 .thenReturn(Single.just(customer("1", "Ana Torres", CustomerType.PERSONAL)));
 
         webTestClient
                 .post()
                 .uri("/api/v1/customers")
                 .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue("{\"name\":\"Ana Torres\",\"type\":\"PERSONAL\"}")
+                .bodyValue("{\"name\":\"Ana Torres\",\"type\":\"PERSONAL\",\"profile\":\"VIP\"}")
                 .exchange()
                 .expectStatus()
                 .isCreated()
@@ -68,7 +75,7 @@ class CustomerControllerTest {
                 .expectStatus()
                 .isBadRequest();
 
-        verify(createCustomerUseCase, never()).execute(any(), any());
+        verify(createCustomerUseCase, never()).execute(any(), any(), any());
     }
 
     @Test
@@ -106,5 +113,46 @@ class CustomerControllerTest {
                 .isEqualTo(404)
                 .jsonPath("$.detail")
                 .isEqualTo("El cliente no existe");
+    }
+
+    @Test
+    void requiresProfile() {
+        webTestClient.post().uri("/api/v1/customers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"name\":\"Ana Torres\",\"type\":\"PERSONAL\"}")
+                .exchange()
+                .expectStatus().isBadRequest();
+
+        verify(createCustomerUseCase, never()).execute(any(), any(), any());
+    }
+
+    @Test
+    void returnsUnprocessableWhenProfileDoesNotMatchType() {
+        when(
+                createCustomerUseCase.execute(
+                        "Ana Torres",
+                        CustomerType.PERSONAL,
+                        CustomerProfile.PYME))
+                .thenReturn(Single.error(new BusinessRuleException(
+                        "El perfil PYME no corresponde a un cliente PERSONAL")));
+
+        webTestClient.post().uri("/api/v1/customers")
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue("{\"name\":\"Ana Torres\",\"type\":\"PERSONAL\",\"profile\":\"PYME\"}")
+                .exchange()
+                .expectStatus().isEqualTo(422)
+                .expectHeader().contentType(MediaType.APPLICATION_PROBLEM_JSON);
+    }
+
+    @Test
+    void returnsProfileOfCustomer() {
+        when(getCustomerUseCase.execute("1"))
+                .thenReturn(Single.just(customer("1", "Ana Torres", CustomerType.PERSONAL)));
+
+        webTestClient.get().uri("/api/v1/customers/1")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody()
+                .jsonPath("$.profile").isEqualTo("VIP");
     }
 }

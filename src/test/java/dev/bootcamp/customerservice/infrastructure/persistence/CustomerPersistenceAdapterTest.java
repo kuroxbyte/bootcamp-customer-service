@@ -1,6 +1,7 @@
 package dev.bootcamp.customerservice.infrastructure.persistence;
 
 import dev.bootcamp.customerservice.domain.model.customer.Customer;
+import dev.bootcamp.customerservice.domain.model.customer.CustomerProfile;
 import dev.bootcamp.customerservice.domain.model.customer.CustomerType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ class CustomerPersistenceAdapterTest {
         Customer customer = new Customer();
         customer.setName("Comercial Andina SAC");
         customer.setType(CustomerType.BUSINESS);
+        customer.setProfile(CustomerProfile.PYME);
 
         Customer saved = adapter.save(customer).blockingGet();
 
@@ -37,7 +39,8 @@ class CustomerPersistenceAdapterTest {
                         found ->
                                 found.getId().equals(saved.getId())
                                         && found.getName().equals("Comercial Andina SAC")
-                                        && found.getType() == CustomerType.BUSINESS);
+                                        && found.getType() == CustomerType.BUSINESS
+                                        && found.getProfile() == CustomerProfile.PYME);
     }
 
     @Test
