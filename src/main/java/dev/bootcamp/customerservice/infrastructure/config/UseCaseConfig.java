@@ -1,5 +1,6 @@
 package dev.bootcamp.customerservice.infrastructure.config;
 
+import dev.bootcamp.customerservice.application.port.CustomerEventPublisher;
 import dev.bootcamp.customerservice.application.port.CustomerRepository;
 import dev.bootcamp.customerservice.application.usecase.CreateCustomerUseCase;
 import dev.bootcamp.customerservice.application.usecase.CreateCustomerUseCaseImpl;
@@ -19,8 +20,10 @@ public class UseCaseConfig {
      * Registra el caso de uso {@link CreateCustomerUseCase}.
      */
     @Bean
-    public CreateCustomerUseCase createCustomerUseCase(CustomerRepository customerRepository) {
-        return new CreateCustomerUseCaseImpl(customerRepository);
+    public CreateCustomerUseCase createCustomerUseCase(
+            CustomerRepository customerRepository,
+            CustomerEventPublisher customerEventPublisher) {
+        return new CreateCustomerUseCaseImpl(customerRepository, customerEventPublisher);
     }
 
     /**

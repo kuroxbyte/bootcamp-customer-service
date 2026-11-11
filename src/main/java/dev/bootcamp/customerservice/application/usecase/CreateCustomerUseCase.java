@@ -12,6 +12,9 @@ import io.reactivex.rxjava3.core.Single;
  * <p>El perfil es obligatorio y debe corresponder al tipo: un cliente personal es estándar o VIP;
  * uno empresarial, estándar o PYME.
  *
+ * <p>Después de guardar el cliente publica el evento {@code CustomerCreated} para que otros
+ * microservicios (por ejemplo, auth-service) conozcan al cliente sin consultarlo por REST.
+ *
  * <p>Es reactivo: no hace nada hasta que se suscribe al {@link Single}. Termina con error {@link
  * BusinessRuleException} si el perfil no corresponde al tipo.
  */
