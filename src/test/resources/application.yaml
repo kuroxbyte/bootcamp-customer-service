@@ -5,8 +5,6 @@ spring:
   cloud:
     config:
       enabled: false
-    compatibility-verifier:
-      enabled: false
   mongodb:
     uri: mongodb://localhost:27017/customer_test_db
   kafka:
