@@ -1,5 +1,6 @@
 package dev.bootcamp.customerservice.application.usecase;
 
+import dev.bootcamp.customerservice.application.port.CustomerEventPublisher;
 import dev.bootcamp.customerservice.application.port.CustomerRepository;
 import dev.bootcamp.customerservice.domain.exception.BusinessRuleException;
 import dev.bootcamp.customerservice.domain.model.customer.Customer;
@@ -12,12 +13,16 @@ import io.reactivex.rxjava3.core.Single;
  */
 public class CreateCustomerUseCaseImpl implements CreateCustomerUseCase {
     private final CustomerRepository customerRepository;
+    private final CustomerEventPublisher customerEventPublisher;
 
     /**
      * Crea el caso de uso con los adaptadores de sus puertos.
      */
-    public CreateCustomerUseCaseImpl(CustomerRepository customerRepository) {
+    public CreateCustomerUseCaseImpl(
+            CustomerRepository customerRepository,
+            CustomerEventPublisher customerEventPublisher) {
         this.customerRepository = customerRepository;
+        this.customerEventPublisher = customerEventPublisher;
     }
 
     @Override
@@ -32,6 +37,10 @@ public class CreateCustomerUseCaseImpl implements CreateCustomerUseCase {
             customer.setType(type);
             customer.setProfile(profile);
             return customer;
-        }).flatMap(customerRepository::save);
+        })
+                .flatMap(customerRepository::save)
+                .flatMap(saved -> customerEventPublisher
+                        .publishCustomerCreated(saved)
+                        .andThen(Single.just(saved)));
     }
 }
