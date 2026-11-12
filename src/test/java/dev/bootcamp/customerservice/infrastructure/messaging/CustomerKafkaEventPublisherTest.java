@@ -17,6 +17,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -55,7 +56,9 @@ class CustomerKafkaEventPublisherTest {
         when(kafkaTemplate.send(eq("customer-events"), eq("c1"), anyString()))
                 .thenReturn(CompletableFuture.completedFuture(null));
 
-        publisher.publishCustomerCreated(customer).test().assertComplete();
+        publisher.publishCustomerCreated(customer).test().awaitDone(
+                2,
+                TimeUnit.SECONDS).assertComplete();
 
         ArgumentCaptor<String> json = ArgumentCaptor.forClass(String.class);
         verify(kafkaTemplate).send(eq("customer-events"), eq("c1"), json.capture());
@@ -73,6 +76,8 @@ class CustomerKafkaEventPublisherTest {
                 .thenReturn(
                         CompletableFuture.failedFuture(new IllegalStateException("broker down")));
 
-        publisher.publishCustomerCreated(customer).test().assertComplete();
+        publisher.publishCustomerCreated(customer).test().awaitDone(
+                2,
+                TimeUnit.SECONDS).assertComplete();
     }
 }

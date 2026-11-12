@@ -3,6 +3,7 @@ package dev.bootcamp.customerservice.infrastructure.messaging;
 import dev.bootcamp.customerservice.application.port.CustomerEventPublisher;
 import dev.bootcamp.customerservice.domain.model.customer.Customer;
 import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -15,9 +16,9 @@ import java.time.Instant;
 /**
  * Implementa el puerto {@link CustomerEventPublisher} publicando en Kafka.
  *
- * <p>El evento se publica después de guardar el cliente. Si Kafka no está disponible, el error se
- * registra y la creación del cliente no falla: el evento se pierde (limitación conocida; evitarla
- * requiere el patrón outbox).
+ * <p>El evento se publica después de guardar el cliente. Si Kafka no está disponible (se espera
+ * como máximo {@code max.block.ms}, 1 s en config-repo), el error se registra y la creación del
+ * cliente no falla: el evento se pierde (limitación conocida; evitarla requiere el patrón outbox).
  */
 @Slf4j
 @Component
@@ -56,6 +57,9 @@ public class CustomerKafkaEventPublisher implements CustomerEventPublisher {
                     customer.getId(),
                     jsonMapper.writeValueAsString(event)));
         })
+                // send() puede bloquear mientras busca al broker (hasta max.block.ms): fuera del
+                // hilo de eventos de WebFlux.
+                .subscribeOn(Schedulers.io())
                 .doOnComplete(() -> log.info(
                         "CustomerCreated published customerId={}",
                         customer.getId()))
