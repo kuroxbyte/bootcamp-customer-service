@@ -7,23 +7,15 @@ import dev.bootcamp.customerservice.domain.model.customer.Customer;
 import dev.bootcamp.customerservice.domain.model.customer.CustomerProfile;
 import dev.bootcamp.customerservice.domain.model.customer.CustomerType;
 import io.reactivex.rxjava3.core.Single;
+import lombok.RequiredArgsConstructor;
 
 /**
  * Implementación de {@link CreateCustomerUseCase}.
  */
+@RequiredArgsConstructor
 public class CreateCustomerUseCaseImpl implements CreateCustomerUseCase {
     private final CustomerRepository customerRepository;
     private final CustomerEventPublisher customerEventPublisher;
-
-    /**
-     * Crea el caso de uso con los adaptadores de sus puertos.
-     */
-    public CreateCustomerUseCaseImpl(
-            CustomerRepository customerRepository,
-            CustomerEventPublisher customerEventPublisher) {
-        this.customerRepository = customerRepository;
-        this.customerEventPublisher = customerEventPublisher;
-    }
 
     @Override
     public Single<Customer> execute(String name, CustomerType type, CustomerProfile profile) {
