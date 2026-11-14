@@ -16,9 +16,10 @@ import java.time.Instant;
 /**
  * Implementa el puerto {@link CustomerEventPublisher} publicando en Kafka.
  *
- * <p>El evento se publica después de guardar el cliente. Si Kafka no está disponible (se espera
- * como máximo {@code max.block.ms}, 1 s en config-repo), el error se registra y la creación del
- * cliente no falla: el evento se pierde (limitación conocida; evitarla requiere el patrón outbox).
+ * <p>Publica {@code CustomerCreated}, {@code CustomerUpdated} y {@code CustomerClosed} después de
+ * guardar el cliente. Si Kafka no está disponible (se espera como máximo {@code max.block.ms}, 1 s
+ * en config-repo), el error se registra y la operación no falla: el evento se pierde (limitación
+ * conocida; evitarla requiere el patrón outbox).
  */
 @Slf4j
 @Component
@@ -45,9 +46,23 @@ public class CustomerKafkaEventPublisher implements CustomerEventPublisher {
 
     @Override
     public Completable publishCustomerCreated(Customer customer) {
+        return publish(CustomerEvent.CUSTOMER_CREATED, customer);
+    }
+
+    @Override
+    public Completable publishCustomerUpdated(Customer customer) {
+        return publish(CustomerEvent.CUSTOMER_UPDATED, customer);
+    }
+
+    @Override
+    public Completable publishCustomerClosed(Customer customer) {
+        return publish(CustomerEvent.CUSTOMER_CLOSED, customer);
+    }
+
+    private Completable publish(String eventType, Customer customer) {
         return Completable.defer(() -> {
-            CustomerCreatedEvent event = new CustomerCreatedEvent(
-                    CustomerCreatedEvent.EVENT_TYPE,
+            CustomerEvent event = new CustomerEvent(
+                    eventType,
                     customer.getId(),
                     customer.getType().name(),
                     customer.getProfile().name(),
@@ -61,11 +76,13 @@ public class CustomerKafkaEventPublisher implements CustomerEventPublisher {
                 // hilo de eventos de WebFlux.
                 .subscribeOn(Schedulers.io())
                 .doOnComplete(() -> log.info(
-                        "CustomerCreated published customerId={}",
+                        "{} published customerId={}",
+                        eventType,
                         customer.getId()))
                 .onErrorComplete(error -> {
                     log.error(
-                            "CustomerCreated could not be published customerId={}",
+                            "{} could not be published customerId={}",
+                            eventType,
                             customer.getId(),
                             error);
                     return true;

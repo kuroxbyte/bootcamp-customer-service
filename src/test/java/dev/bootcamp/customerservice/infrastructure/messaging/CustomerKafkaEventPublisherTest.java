@@ -22,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -79,5 +80,22 @@ class CustomerKafkaEventPublisherTest {
         publisher.publishCustomerCreated(customer).test().awaitDone(
                 2,
                 TimeUnit.SECONDS).assertComplete();
+    }
+
+    @Test
+    void publishesCustomerUpdatedAndCustomerClosed() {
+        when(kafkaTemplate.send(eq("customer-events"), eq("c1"), anyString()))
+                .thenReturn(CompletableFuture.completedFuture(null));
+
+        publisher.publishCustomerUpdated(customer).test().awaitDone(2, TimeUnit.SECONDS)
+                .assertComplete();
+        publisher.publishCustomerClosed(customer).test().awaitDone(2, TimeUnit.SECONDS)
+                .assertComplete();
+
+        ArgumentCaptor<String> json = ArgumentCaptor.forClass(String.class);
+        verify(kafkaTemplate, times(2)).send(eq("customer-events"), eq("c1"), json.capture());
+        assertThat(json.getAllValues())
+                .extracting(value -> jsonMapper.readTree(value).get("eventType").asString())
+                .containsExactly("CustomerUpdated", "CustomerClosed");
     }
 }

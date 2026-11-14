@@ -15,7 +15,8 @@ final class CustomerPersistenceMapper {
                 customer.getId(),
                 customer.getName(),
                 customer.getType().name(),
-                customer.getProfile().name());
+                customer.getProfile().name(),
+                customer.getClosedAt());
     }
 
     static Customer toDomain(CustomerDocument document) {
@@ -24,6 +25,7 @@ final class CustomerPersistenceMapper {
         customer.setName(document.getName());
         customer.setType(CustomerType.valueOf(document.getType()));
         customer.setProfile(CustomerProfile.valueOf(document.getProfile()));
+        customer.setClosedAt(document.getClosedAt());
         return customer;
     }
 }

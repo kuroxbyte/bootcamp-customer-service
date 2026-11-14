@@ -1,7 +1,9 @@
 package dev.bootcamp.customerservice.infrastructure.web;
 
 import dev.bootcamp.customerservice.domain.exception.BusinessRuleException;
+import dev.bootcamp.customerservice.domain.exception.ForbiddenException;
 import dev.bootcamp.customerservice.domain.exception.NotFoundException;
+import dev.bootcamp.customerservice.infrastructure.client.ServiceUnavailableException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
@@ -17,14 +19,34 @@ import reactor.core.publisher.Mono;
  * <ul>
  *   <li>400: datos de entrada inválidos o falta un header; lo resuelve {@link
  *       ResponseEntityExceptionHandler}.
+ *   <li>403: {@link ForbiddenException}.
  *   <li>404: {@link NotFoundException}.
  *   <li>422: {@link BusinessRuleException}.
+ *   <li>503: {@link ServiceUnavailableException}; el detalle ya lo registra el cliente HTTP.
  *   <li>500: cualquier otro error inesperado.
  * </ul>
  */
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+
+    /**
+     * Responde 403 cuando quien hace la petición no puede realizar la operación.
+     */
+    @ExceptionHandler(ForbiddenException.class)
+    public Mono<ResponseEntity<ProblemDetail>> handleForbidden(ForbiddenException ex) {
+        log.warn("Operation forbidden: {}", ex.getMessage());
+        return problem(HttpStatus.FORBIDDEN, "Operación no permitida", ex.getMessage());
+    }
+
+    /**
+     * Responde 503 cuando otro microservicio no está disponible.
+     */
+    @ExceptionHandler(ServiceUnavailableException.class)
+    public Mono<ResponseEntity<ProblemDetail>> handleServiceUnavailable(
+            ServiceUnavailableException ex) {
+        return problem(HttpStatus.SERVICE_UNAVAILABLE, "Servicio no disponible", ex.getMessage());
+    }
 
     /**
      * Responde 404 cuando el recurso no existe o no pertenece al cliente.

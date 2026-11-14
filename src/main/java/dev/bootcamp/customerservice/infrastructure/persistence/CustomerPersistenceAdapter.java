@@ -2,6 +2,7 @@ package dev.bootcamp.customerservice.infrastructure.persistence;
 
 import dev.bootcamp.customerservice.application.port.CustomerRepository;
 import dev.bootcamp.customerservice.domain.model.customer.Customer;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,12 @@ public class CustomerPersistenceAdapter implements CustomerRepository {
     @Override
     public Maybe<Customer> findById(String customerId) {
         return Maybe.fromPublisher(mongoRepository.findById(customerId))
+                .map(CustomerPersistenceMapper::toDomain);
+    }
+
+    @Override
+    public Flowable<Customer> findAllActive() {
+        return Flowable.fromPublisher(mongoRepository.findByClosedAtIsNull())
                 .map(CustomerPersistenceMapper::toDomain);
     }
 }
