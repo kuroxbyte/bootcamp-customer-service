@@ -11,6 +11,24 @@ tags:
     description: Clientes del banco
 paths:
   /api/v1/customers:
+    get:
+      tags: [Customers]
+      operationId: listCustomers
+      summary: Listar los clientes activos del banco
+      description: Solo para empleados (rol ADMIN en el API Gateway). Los clientes dados de baja no aparecen.
+      parameters:
+        - $ref: '#/components/parameters/XAdminId'
+      responses:
+        '200':
+          description: Clientes activos (vacío si no hay)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
     post:
       tags: [Customers]
       operationId: createCustomer
@@ -37,7 +55,7 @@ paths:
       tags: [Customers]
       operationId: getCustomerById
       summary: Consultar un cliente
-      description: Usado por account-service y credit-service para validar el cliente y su tipo.
+      description: Usado por account-service y credit-service para validar el cliente y su tipo. Un cliente dado de baja responde 404, así no puede adquirir productos.
       parameters:
         - $ref: '#/components/parameters/CustomerId'
       responses:
@@ -49,6 +67,62 @@ paths:
                 $ref: '#/components/schemas/CustomerResponse'
         '404':
           $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Customers]
+      operationId: updateCustomer
+      summary: Modificar el nombre y el perfil de un cliente
+      description: >-
+        Un empleado (X-Admin-Id) modifica a cualquier cliente. Un cliente (X-Customer-Id) solo se
+        modifica a sí mismo y solo su nombre: debe enviar su perfil actual. El tipo no cambia.
+        Publica CustomerUpdated.
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/XCustomerIdOptional'
+        - $ref: '#/components/parameters/XAdminIdOptional'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerUpdateRequest'
+      responses:
+        '200':
+          description: Cliente modificado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+    delete:
+      tags: [Customers]
+      operationId: deleteCustomer
+      summary: Dar de baja a un cliente
+      description: >-
+        Solo para empleados. Baja lógica: el cliente conserva sus datos con su fecha de baja, deja
+        de listarse y ya no puede adquirir productos. Solo se da de baja a un cliente sin cuentas,
+        créditos ni tarjetas de crédito activos (se consultan account-service y credit-service).
+        Publica CustomerClosed y auth-service elimina su usuario.
+      parameters:
+        - $ref: '#/components/parameters/CustomerId'
+        - $ref: '#/components/parameters/XAdminId'
+      responses:
+        '204':
+          description: Cliente dado de baja
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/BusinessRuleViolation'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
 components:
   parameters:
     CustomerId:
@@ -56,6 +130,27 @@ components:
       in: path
       required: true
       description: Id del cliente
+      schema:
+        type: string
+    XAdminId:
+      name: X-Admin-Id
+      in: header
+      required: true
+      description: Usuario del empleado; lo envía el API Gateway con el claim sub de un token ADMIN
+      schema:
+        type: string
+    XAdminIdOptional:
+      name: X-Admin-Id
+      in: header
+      required: false
+      description: Usuario del empleado, si la petición la hace un empleado (token ADMIN)
+      schema:
+        type: string
+    XCustomerIdOptional:
+      name: X-Customer-Id
+      in: header
+      required: false
+      description: Id del cliente, si la petición la hace un cliente (token CUSTOMER)
       schema:
         type: string
   schemas:
@@ -77,6 +172,16 @@ components:
           example: Comercial Andina SAC
         type:
           $ref: '#/components/schemas/CustomerType'
+        profile:
+          $ref: '#/components/schemas/CustomerProfile'
+    CustomerUpdateRequest:
+      type: object
+      required: [name, profile]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          example: Comercial Andina SAC
         profile:
           $ref: '#/components/schemas/CustomerProfile'
     CustomerResponse:
@@ -112,13 +217,25 @@ components:
           format: uri
   responses:
     BusinessRuleViolation:
-      description: El perfil no corresponde al tipo de cliente
+      description: Se incumple una regla de negocio (el perfil no corresponde al tipo, o el cliente tiene productos activos)
       content:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
     BadRequest:
       description: Datos de entrada inválidos
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: Un cliente intenta modificar a otro cliente o cambiar su perfil, o la petición no viene ni de un cliente ni de un empleado
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: account-service o credit-service no respondió a tiempo o no está disponible
       content:
         application/problem+json:
           schema:

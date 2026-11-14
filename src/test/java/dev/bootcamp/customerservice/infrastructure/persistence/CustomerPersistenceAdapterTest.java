@@ -12,7 +12,10 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.mongodb.MongoDBContainer;
 
+import java.time.LocalDate;
 import java.util.concurrent.TimeUnit;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 @Testcontainers
 @DataMongoTest
@@ -50,5 +53,27 @@ class CustomerPersistenceAdapterTest {
                 .awaitDone(5, TimeUnit.SECONDS)
                 .assertComplete()
                 .assertNoValues();
+    }
+
+    @Test
+    void listsOnlyActiveCustomersAndKeepsTheClosingDate() {
+        Customer active = adapter.save(customer("Ana")).blockingGet();
+        Customer closed = customer("Luis");
+        closed.close(LocalDate.of(2026, 11, 16));
+        Customer savedClosed = adapter.save(closed).blockingGet();
+
+        assertThat(adapter.findAllActive().map(Customer::getId).toList().blockingGet())
+                .contains(active.getId())
+                .doesNotContain(savedClosed.getId());
+        assertThat(adapter.findById(savedClosed.getId()).blockingGet().getClosedAt())
+                .isEqualTo(LocalDate.of(2026, 11, 16));
+    }
+
+    private static Customer customer(String name) {
+        Customer customer = new Customer();
+        customer.setName(name);
+        customer.setType(CustomerType.PERSONAL);
+        customer.setProfile(CustomerProfile.STANDARD);
+        return customer;
     }
 }

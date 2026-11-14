@@ -16,4 +16,18 @@ public interface CustomerEventPublisher {
      *     registra el error)
      */
     Completable publishCustomerCreated(Customer customer);
+
+    /**
+     * Publica que se modificó un cliente (nombre o perfil).
+     *
+     * @return termina cuando se publicó, o sin error si no se pudo (el adaptador lo registra)
+     */
+    Completable publishCustomerUpdated(Customer customer);
+
+    /**
+     * Publica que se dio de baja un cliente.
+     *
+     * @return termina cuando se publicó, o sin error si no se pudo (el adaptador lo registra)
+     */
+    Completable publishCustomerClosed(Customer customer);
 }

@@ -1,12 +1,18 @@
 package dev.bootcamp.customerservice.infrastructure.web.controller;
 
+import dev.bootcamp.customerservice.application.usecase.CloseCustomerUseCase;
 import dev.bootcamp.customerservice.application.usecase.CreateCustomerUseCase;
 import dev.bootcamp.customerservice.application.usecase.GetCustomerUseCase;
+import dev.bootcamp.customerservice.application.usecase.UpdateCustomerUseCase;
 import dev.bootcamp.customerservice.domain.exception.BusinessRuleException;
+import dev.bootcamp.customerservice.domain.exception.ForbiddenException;
 import dev.bootcamp.customerservice.domain.exception.NotFoundException;
 import dev.bootcamp.customerservice.domain.model.customer.Customer;
 import dev.bootcamp.customerservice.domain.model.customer.CustomerProfile;
 import dev.bootcamp.customerservice.domain.model.customer.CustomerType;
+import dev.bootcamp.customerservice.infrastructure.client.ServiceUnavailableException;
+import io.reactivex.rxjava3.core.Completable;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Single;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +34,10 @@ class CustomerControllerTest {
     @MockitoBean private CreateCustomerUseCase createCustomerUseCase;
 
     @MockitoBean private GetCustomerUseCase getCustomerUseCase;
+
+    @MockitoBean private UpdateCustomerUseCase updateCustomerUseCase;
+
+    @MockitoBean private CloseCustomerUseCase closeCustomerUseCase;
 
     private static Customer customer(String id, String name, CustomerType type) {
         Customer customer = new Customer();
@@ -155,4 +165,73 @@ class CustomerControllerTest {
                 .expectBody()
                 .jsonPath("$.profile").isEqualTo("VIP");
     }
+
+    @Test
+    void listsActiveCustomersForAdmin() {
+        when(getCustomerUseCase.findAll()).thenReturn(Flowable.just(
+                customer("1", "Ana Torres", CustomerType.PERSONAL),
+                customer("2", "Andina SAC", CustomerType.BUSINESS)));
+
+        webTestClient.get().uri("/api/v1/customers").header("X-Admin-Id", "admin")
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody().jsonPath("$.length()").isEqualTo(2)
+                .jsonPath("$[1].name").isEqualTo("Andina SAC");
+        webTestClient.get().uri("/api/v1/customers").exchange().expectStatus().isBadRequest();
+    }
+
+    @Test
+    void updatesCustomerAsCustomerOrAsAdmin() {
+        Customer updated = customer("1", "Ana María Torres", CustomerType.PERSONAL);
+        when(updateCustomerUseCase.execute("1", "1", "Ana María Torres", CustomerProfile.VIP))
+                .thenReturn(Single.just(updated));
+        when(updateCustomerUseCase.execute("1", null, "Ana María Torres", CustomerProfile.VIP))
+                .thenReturn(Single.just(updated));
+
+        for (String header : new String[] {"X-Customer-Id", "X-Admin-Id"}) {
+            webTestClient.put().uri("/api/v1/customers/1")
+                    .header(header, header.equals("X-Customer-Id") ? "1" : "admin")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(UPDATE)
+                    .exchange()
+                    .expectStatus().isOk()
+                    .expectBody().jsonPath("$.name").isEqualTo("Ana María Torres");
+        }
+    }
+
+    @Test
+    void updateWithoutIdentityOrForbiddenChangeIsForbidden() {
+        when(updateCustomerUseCase.execute("1", "2", "Ana María Torres", CustomerProfile.VIP))
+                .thenReturn(Single.error(new ForbiddenException("Solo sus propios datos")));
+
+        webTestClient.put().uri("/api/v1/customers/1")
+                .contentType(MediaType.APPLICATION_JSON).bodyValue(UPDATE)
+                .exchange().expectStatus().isForbidden();
+        webTestClient.put().uri("/api/v1/customers/1").header("X-Customer-Id", "2")
+                .contentType(MediaType.APPLICATION_JSON).bodyValue(UPDATE)
+                .exchange()
+                .expectStatus().isForbidden()
+                .expectBody().jsonPath("$.detail").isEqualTo("Solo sus propios datos");
+    }
+
+    @Test
+    void deletesCustomerOrExplainsWhyNot() {
+        when(closeCustomerUseCase.execute("1")).thenReturn(Completable.complete());
+        when(closeCustomerUseCase.execute("2"))
+                .thenReturn(Completable.error(new BusinessRuleException("Tiene productos")));
+        when(closeCustomerUseCase.execute("3")).thenReturn(Completable.error(
+                new ServiceUnavailableException("account-service no está disponible", null)));
+
+        delete("1").expectStatus().isNoContent();
+        delete("2").expectStatus().isEqualTo(422);
+        delete("3").expectStatus().isEqualTo(503);
+    }
+
+    private WebTestClient.ResponseSpec delete(String customerId) {
+        return webTestClient.delete().uri("/api/v1/customers/" + customerId)
+                .header("X-Admin-Id", "admin")
+                .exchange();
+    }
+
+    private static final String UPDATE = "{\"name\":\"Ana María Torres\",\"profile\":\"VIP\"}";
 }

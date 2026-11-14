@@ -1,6 +1,7 @@
 package dev.bootcamp.customerservice.application.port;
 
 import dev.bootcamp.customerservice.domain.model.customer.Customer;
+import io.reactivex.rxjava3.core.Flowable;
 import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Single;
 
@@ -20,4 +21,9 @@ public interface CustomerRepository {
      * @return el cliente, o vacío si no existe
      */
     Maybe<Customer> findById(String customerId);
+
+    /**
+     * Clientes que no fueron dados de baja.
+     */
+    Flowable<Customer> findAllActive();
 }

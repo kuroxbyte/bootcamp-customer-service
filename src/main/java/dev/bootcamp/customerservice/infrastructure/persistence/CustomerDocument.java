@@ -7,6 +7,8 @@ import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDate;
+
 /**
  * Cliente tal como se guarda en la colección {@code customers}.
  */
@@ -20,4 +22,5 @@ public class CustomerDocument {
     private String name;
     private String type;
     private String profile;
+    private LocalDate closedAt;
 }
